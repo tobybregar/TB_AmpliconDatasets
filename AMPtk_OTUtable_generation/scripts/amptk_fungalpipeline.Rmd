@@ -1,0 +1,115 @@
+---
+title: "amptk_fungalpipeline"
+author: "Claire Willing"
+date: "2024-01-03"
+output: html_document
+---
+
+##Bioinfomatic steps in AMPtk
+
+**NOTE:** AMPtk is not working with M1 or M2 chips (latest Mac computers); you are able to run it, but Claire has had to run through Docker in order to use it eg (amptk-docker illumina -i SeqDataTest -o TerracesTest -f CTTGGTCATTTAGAGGAAGTAA -r GCTGCGTTCTTCATCGATGC --require_primer off --rescue_forward off --primer_mismatch 2)
+
+##Sequencing primers
+
+```{zsh, engine.opts='-l'}
+#primer combinations 
+
+##Taylor ITS2 primers
+ITS5_8S_FUN="AACTTTYRRCAAYGGATCWCT"
+ITS2_FUN="AGCCTCCGCTTATTGATATGCTTAART"
+
+##ITS1 primers
+ITS1F="CTTGGTCATTTAGAGGAAGTAA"
+ITS2="GCTGCGTTCTTCATCGATGC"
+```
+
+#Step 1: process reads; sub in your primers
+
+```{zsh, engine.opts='-l'}
+#sub in your primers
+amptk-docker illumina -i raw_data/sequencing  -o results/amptk/ProcessedReads -f $ITS1F -r $ITS2 --require_primer off --rescue_forward off --primer_mismatch 6 
+#(6 wildcards in these primers)
+mkdir amptk_results
+mv ProcessedReads* amptk_results
+```
+
+##Clustering data; 2 errors in alignment allowed (longer seq length); default of 97% similarity
+
+```{zsh, engine.opts='-l'}
+amptk-docker cluster -i results/amptk/ProcessedReads.demux.fq.gz -e 1.0 -o results/amptk/ProcessedReads 
+```
+
+##Filter table based on what is in negative controls
+
+```{zsh, engine.opts='-l'}
+amptk-docker filter -i results/amptk/ProcessedReads.otu_table.txt -f results/amptk/ProcessedReads.cluster.otus.fa -o results/amptk -d negatives F96-NegPCR,F137-NegPCR2,F163-NegPCR3,F107Extraction-Control,F127-ExtractioncontrolROOT1,F152-ExtractioncontrolRoot2,F159-ExtractionControlRoot3 -p 0.005 
+```
+
+##Post clustering LULU; this won't work through docker, so I didn't run
+
+```{zsh, engine.opts='-l'}
+amptk-docker lulu -i results/amptk/ProcessedReads.final.txt -f results/amptk/ProcessedReads.filtered.otus.fa -o results/amptk/ProcessedReadsClean  
+```
+
+##Assign taxonomy (used ITS database)
+
+```{zsh, engine.opts='-l'}
+amptk-docker taxonomy -f results/amptk/ProcessedReadsClean.cluster.otus.fa -i results/amptk/ProcessedReadsClean.otu_table.txt -m results/amptk/ProcessedReads.mapping_file.txt -d ITS -o results/amptk/Results
+```
+
+#NOW IN R Read in libraries
+```{r}
+# Function to install and load packages
+install_and_load <- function(packages) {
+  for (pkg in packages) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      if (pkg == "phyloseq") {
+        if (!requireNamespace("BiocManager", quietly = TRUE)) {
+          install.packages("BiocManager")
+        }
+        BiocManager::install(pkg)
+      } else {
+        install.packages(pkg)
+      }
+    }
+    library(pkg, character.only = TRUE)
+  }
+}
+
+# List of required packages
+required_packages <- c(
+  "phyloseq",  # For working with sequencing data
+  "dplyr",     # For data manipulation
+  "ggplot2"    # For plotting
+)
+
+# Install and load packages
+install_and_load(required_packages)
+```
+
+#Read in Seq data ####Creating phyloseq objects and merging OTU with meta data and removing plant reads
+
+```{r}
+# The biom file is your OTU table + taxonomy table that you just created
+biom_file <- "results/amptk/Results/Results.biom"
+
+# The map file is your simple table of sequencing data names and sample names that match your metadata
+map_file <- "data/metadata/SequencingID_CWilling_Fun.txt"
+
+# Import BIOM and metadata
+BIOM <- import_biom(biom_file, parseFunction = parse_taxonomy_greengenes)
+META <- import_qiime_sample_data(map_file)
+
+# Merge into a phyloseq object
+FungiPhyloseq <- merge_phyloseq(BIOM, META)
+
+# Rename taxonomy headings
+colnames(tax_table(FungiPhyloseq)) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+```
+
+Store and save your phyloseq object
+
+```{r}
+# Save the phyloseq object
+saveRDS(FungiPhyloseq, file = "results/phyloseq/FungiPhyloseqData.rds")
+```
