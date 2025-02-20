@@ -1,5 +1,5 @@
 ---
-title: "amptk_fungalpipeline"
+title: "amptk_phyloseq_pipeline"
 author: "Claire Willing"
 date: "2024-01-03"
 output: html_document
