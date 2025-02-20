@@ -2,9 +2,4 @@
 .Rhistory
 .RData
 .Ruserdata
-AMPtk_OTUtable_generation/logs
-AMPtk_OTUtable_generation/logs/*
-AMPtk_OTUtable_generation/results
-AMPtk_OTUtable_generation/results/*
-AMPtk_OTUtable_generation/stats
-AMPtk_OTUtable_generation/stats/*
+data*

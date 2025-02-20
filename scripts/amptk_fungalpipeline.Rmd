@@ -1,0 +1,167 @@
+---
+title: "amptk_fungalpipeline"
+author: "Claire Willing"
+date: "2024-01-03"
+output: html_document
+bibliography: references.bib
+---
+
+## Bioinfomatic steps in AMPtk
+
+**NOTE:** AMPtk is not working with M1 or M2 chips (latest Mac computers); you are able to run it, but Claire has had to run through Docker in order to use it eg (amptk-docker illumina -i SeqDataTest -o TerracesTest -f CTTGGTCATTTAGAGGAAGTAA -r GCTGCGTTCTTCATCGATGC --require_primer off --rescue_forward off --primer_mismatch 2)
+
+**On a Mac:**
+
+```{bash echo=FALSE}
+brew install --docker
+```
+
+## Set up
+
+### Step 1: process reads; sub in your primers
+
+```{zsh engine.opts='-l'}
+export ITS5_8S_FUN=AACTTTYRRCAAYGGATCWCT
+export ITS2_FUN=AGCCTCCGCTTATTGATATGCTTAART
+export ITS1F=CTTGGTCATTTAGAGGAAGTAA
+export ITS2=GCTGCGTTCTTCATCGATGC
+
+amptk-docker illumina \
+  -i data/raw_data/sequencing \
+  -o trimmed \
+  -f $ITS5_8S_FUN -r $ITS2_FUN \
+  --require_primer on \
+  --rescue_forward off \
+  --primer_mismatch 6  \
+  --cleanup
+```
+
+## Clustering data; 2 errors in alignment allowed (longer seq length); default of 97% similarity
+
+```{zsh, engine.opts='-l'}
+amptk-docker cluster -i trimmed.demux.fq.gz -e 1.0 -o clustered   
+```
+
+## Filter table based on what is in negative controls
+
+```{zsh, engine.opts='-l'}
+amptk-docker filter -i clustered.otu_table.txt -f clustered.cluster.otus.fa -p 0.005 # Set p-value threshold
+```
+
+## Assign taxonomy (used ITS database)
+
+Change the -o STUDY to your project name eg Westside
+
+```{zsh, engine.opts='-l'}
+amptk-docker taxonomy -f clustered.cluster.otus.fa -i clustered.otu_table.txt -m trimmed.mapping_file.txt -d ITS -o STUDY
+```
+
+### Reorganize files for clarity;
+
+```{zsh, engine.opts='-l'}
+# Create necessary directories
+mkdir -p data/processed_data/
+mkdir -p data/intermediate_data/amptk/logs
+mkdir -p data/intermediate_data/amptk/otu_tables
+
+mv -v trimm* cluster* STUDY* data/intermediate_data/amptk/ 2>/dev/null
+
+mv -v data/intermediate_data/amptk/*.log data/intermediate_data/amptk/logs/ 2>/dev/null
+
+mv -v data/intermediate_data/amptk/STUDY* data/intermediate_data/amptk/otu_tables/ 2>/dev/null
+
+```
+
+## NOW IN R
+
+### Read in libraries
+
+```{r message=FALSE, warning=FALSE}
+# Function to install and load packages
+install_and_load <- function(packages) {
+  for (pkg in packages) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      if (pkg == "phyloseq") {
+        if (!requireNamespace("BiocManager", quietly = TRUE)) {
+          install.packages("BiocManager")
+        }
+        BiocManager::install(pkg)
+      } else {
+        install.packages(pkg)
+      }
+    }
+    library(pkg, character.only = TRUE)
+  }
+}
+
+# List of required packages
+required_packages <- c(
+  "phyloseq",  # For working with sequencing data
+  "dplyr",     # For data manipulation
+  "ggplot2"    # For plotting
+)
+
+# Install and load packages
+install_and_load(required_packages)
+```
+
+# Read in Seq data
+
+#### Create phyloseq object with otu table
+
+```{r}
+# Set file paths for BIOM and mapping files
+biom_file <- "data/intermediate_data/amptk/otu_tables/STUDY.biom"
+
+# Import BIOM and metadata
+BIOM <- import_biom(biom_file, parseFunction = parse_taxonomy_greengenes)
+
+#pull sample names to match with your metadata
+biom_sample_names <- sample_names(BIOM)
+
+map_file <- data.frame(SampleNames = biom_sample_names, row.names = biom_sample_names)
+
+META <- sample_data(map_file)
+
+Phyloseq <- merge_phyloseq(BIOM, META)
+```
+
+#### Load Funfun database
+
+```{r}
+devtools::install_github("ropenscilabs/datastorr")
+devtools::install_github("traitecoevo/fungaltraits")
+```
+
+## Merge with Funfun and fungaltraits for downstream analysis [@flores-moreno; @põlme2020]
+
+```{r}
+library(fungaltraits)
+Funfun <- fungal_traits()
+fungaltraits <- read.csv("fungaltraitsDB/FungalTraits 1.2_ver_16Dec_2020 - V.1.2.csv") %>% rename(Genus = GENUS)
+
+Phylogeny<-c("Phylum", "Class", "Order", "Family")
+
+tax_data <- tax_table(Phyloseq) %>%
+  as.data.frame() %>%
+  mutate(OTU = rownames(.)) %>% 
+  left_join(select(fungaltraits, -Phylogeny), 
+                   by = "Genus") %>%
+  mutate(speciesMatched = Species) %>%
+  left_join(select(Funfun, -Genus), 
+            by = "speciesMatched")%>%
+  mutate(OTU = make.unique(as.character(OTU))) 
+
+rownames(tax_data) <- tax_data$OTU
+
+tax_table(Phyloseq) <- tax_data %>%
+  select(-OTU) %>%
+  as.matrix()
+```
+
+### Store and save your phyloseq object
+
+```{r}
+# Rename STUDY with your project name
+saveRDS(Phyloseq, file = "data/processed_data/STUDY_otu_table.rds")
+```
