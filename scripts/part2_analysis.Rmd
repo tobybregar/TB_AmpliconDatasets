@@ -1,0 +1,148 @@
+---
+title: "Data Analysis"
+author: "Claire Willing"
+date: "2024-12-10"
+output: html_document
+---
+
+### Read in libraries
+
+```{r warning=FALSE}
+# Function to install and load packages
+install_and_load <- function(packages) {
+  for (pkg in packages) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      if (pkg == "phyloseq") {
+        if (!requireNamespace("BiocManager", quietly = TRUE)) {
+          install.packages("BiocManager")
+        }
+        BiocManager::install(pkg)
+      } else {
+        install.packages(pkg)
+      }
+    }
+    library(pkg, character.only = TRUE)
+  }
+}
+
+# List of required packages
+required_packages <- c(
+  "phyloseq",  # For working with sequencing data
+  "dplyr",     # For data manipulation
+  "ggplot2",   # For plotting
+  "readxl",    # For reading Excel files
+  "writexl",   # For writing Excel files
+  "tibble",    # For converting columns to row names
+  "stringr",   # For string manipulation
+  "viridis",   # For color palettes
+  "vegan",     # For statistics
+  "tidyr",     # For data org
+  "knitr",
+  "lme4",
+  "ggeffects", 
+  "cowplot"
+)
+
+# Install and load packages
+install_and_load(required_packages)
+```
+
+### Load data files
+
+Make sure to edit the name of your OTU table (eg STUDY_phyloseq_rare.rds)
+
+```{r}
+seqdata_RARE<-readRDS(
+  "data/processed_data/STUDY_phyloseq_rare.rds")
+seqdata_NOTRARE<-readRDS(
+  "data/processed_data/STUDY_phyloseq_notrare.rds")
+```
+
+### Ordination (NMDS)
+
+Using default of bray for distance (bray is default method for ordinate function)
+
+```{r message=FALSE, warning=FALSE}
+
+ORDtotalvals<-ordinate(seqdata_RARE, "NMDS")
+
+ORD<-plot_ordination(seqdata_RARE, 
+              ORDtotalvals, color="SiteID")+
+              theme_minimal()
+ORD
+```
+
+### Quick barplot
+
+```{r message=FALSE, warning=FALSE}
+
+# Step 1: Merge samples by a grouping variable (e.g., "SampleType")
+ps_merged <- seqdata_RARE %>%
+  merge_samples("SampleType")
+
+# Step 2: Convert to relative abundance
+ps_rel <- ps_merged %>%
+  transform_sample_counts(function(x) x / sum(x))
+
+# Step 3: Aggregate at the taxonomic level of interest (e.g., "Order")
+ps_taxa <- ps_rel %>%
+  tax_glom(taxrank = "Order")
+
+# Step 4: Melt the phyloseq object for visualization
+ps_melt <- ps_taxa %>%
+  psmelt() %>%
+  mutate(
+    Sample = factor(Sample, levels = unique(Sample)),  # Ensure Sample is a factor
+    Order = ifelse(Abundance < 0.1, "Other", Order)   # Group low-abundance taxa as "Other"
+  )
+
+# Step 5: Create the bar plot
+barplot <- ps_melt %>%
+  ggplot(aes(x = Sample, y = Abundance, fill = Phylum)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(
+    x = "Group",
+    y = "Relative Abundance",
+    fill = "Phylum") +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "plasma")  
+    # Use viridis color scale
+
+# Display the plot
+print(barplot)
+```
+
+### Saving figures
+
+Here is an example for saving figures for publication:
+
+*If you don't yet have a directory for figures, you can make one here:*
+
+```{zsh eval=FALSE, engine.opts='-l', include=FALSE}
+mkdir -p figures
+```
+
+Now save this in your figures directory
+
+```{r}
+ggsave("figures/STUDY_bray_ordination.pdf", plot = ORD, width = 6, height = 4, dpi = 300)
+```
+
+You can also use cowplot or other packages if you need to combine figures and add in figure letters
+
+```{r}
+combined_plot <- plot_grid(
+  ORD, barplot,
+  labels = c("A", "B"),  # Add figure letters
+  label_size = 12,        # Adjust label size
+  ncol = 2                # Arrange plots in 2 columns
+)
+
+combined_plot
+```
+
+Now save this combined figure in your figures directory
+
+```{r}
+ggsave("figures/Figure1_AB.pdf", plot = combined_plot, width = 6, height = 4, dpi = 300)
+```

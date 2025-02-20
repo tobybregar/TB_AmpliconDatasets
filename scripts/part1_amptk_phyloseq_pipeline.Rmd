@@ -1,0 +1,235 @@
+---
+title: "amptk_fungalpipeline"
+author: "Claire Willing"
+date: "2024-01-03"
+output: html_document
+bibliography: references.bib
+---
+
+## **Bioinformatic** steps in AMPtk
+
+Here’s a step-by-step guide to the **bioinformatic steps in AMPtk** for processing amplicon sequencing data. AMPtk is a pipeline for analyzing amplicon data (e.g., ITS, 16S, 18S) and includes steps for quality filtering, clustering, chimera removal, and taxonomic assignment. Below is a detailed workflow:
+
+**NOTE:** this script runs AMPtk through docker
+
+# Installation of AMPtk and Docker
+
+#### **On a Mac:**
+
+```{bash echo=FALSE}
+brew install --docker
+```
+
+#### **with Linux:**
+
+```{bash echo=FALSE}
+sudo apt update
+sudo apt install docker.io
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+```
+
+Now log out and log back in for changes to take effect. The remaining steps should be the same for Unix and Linux.
+
+```{bash echo=FALSE}
+docker pull nextgenusfs/amptk
+```
+
+# Set up
+
+## Step 1: Process reads
+
+Select the primers that you used; our standard ones in lab are ITS5_8S_FUN and ITS2_FUN
+
+```{bash engine.opts='-l'}
+export ITS5_8S_FUN=AACTTTYRRCAAYGGATCWCT
+export ITS2_FUN=AGCCTCCGCTTATTGATATGCTTAART
+export ITS1F=CTTGGTCATTTAGAGGAAGTAA
+export ITS2=GCTGCGTTCTTCATCGATGC
+
+amptk-docker illumina \
+  -i data/raw_data/sequencing \
+  -o trimmed \
+  -f $ITS5_8S_FUN -r $ITS2_FUN \
+  --require_primer on \
+  --rescue_forward off \
+  --primer_mismatch 6  \
+  --cleanup
+```
+
+## Step 2: Clustering data
+
+1 error in alignment allowed; default of 97% similarity
+
+```{bash, engine.opts='-l'}
+amptk-docker cluster -i trimmed.demux.fq.gz -e 1.0 -o clustered   
+```
+
+## Step 3: Filter table based on what is in negative controls
+
+-d negatives will filter your reads to remove contaminants and then drop your negative controls; adjust names as needed
+
+```{bash, engine.opts='-l'}
+amptk-docker filter -i clustered.otu_table.txt -f clustered.cluster.otus.fa -d negatives F96-NegPCR, F107Extraction-Control -p 0.005 # Set p-value threshold
+```
+
+## Step 4: Assign taxonomy (used ITS database)
+
+Change the -o STUDY to your project name eg Westside
+
+```{bash, engine.opts='-l'}
+amptk-docker taxonomy -f clustered.cluster.otus.fa -i clustered.otu_table.txt -m trimmed.mapping_file.txt -d ITS -o STUDY
+```
+
+## Step 5: Reorganize files for clarity;
+
+```{bash, engine.opts='-l'}
+# Create necessary directories
+mkdir -p data/processed_data/
+mkdir -p data/intermediate_data/amptk/logs
+mkdir -p data/intermediate_data/amptk/otu_tables
+
+mv -v trimm* cluster* STUDY* data/intermediate_data/amptk/ 2>/dev/null
+
+mv -v data/intermediate_data/amptk/*.log data/intermediate_data/amptk/logs/ 2>/dev/null
+
+mv -v data/intermediate_data/amptk/STUDY* data/intermediate_data/amptk/otu_tables/ 2>/dev/null
+
+```
+
+## Step 6: Create phyloseq object and save with metadata and fungaltraits Funfun info
+
+### Read in R libraries
+
+```{r message=FALSE, warning=FALSE}
+# Function to install and load packages
+install_and_load <- function(packages) {
+  for (pkg in packages) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      if (pkg == "phyloseq") {
+        if (!requireNamespace("BiocManager", quietly = TRUE)) {
+          install.packages("BiocManager")
+        }
+        BiocManager::install(pkg)
+      } else {
+        install.packages(pkg)
+      }
+    }
+    library(pkg, character.only = TRUE)
+  }
+}
+
+# List of required packages
+required_packages <- c(
+  "phyloseq",  # For working with sequencing data
+  "dplyr",     # For data manipulation
+  "ggplot2"    # For plotting
+)
+
+# Install and load packages
+install_and_load(required_packages)
+```
+
+### Create phyloseq object with otu table
+
+```{r}
+# Set file paths for BIOM and mapping files
+biom_file <- "data/intermediate_data/amptk/otu_tables/STUDY.biom"
+
+# Import BIOM and metadata
+BIOM <- import_biom(biom_file, parseFunction = parse_taxonomy_greengenes)
+
+#pull sample names to match with your metadata
+biom_sample_names <- sample_names(BIOM)
+
+map_file <- data.frame(SampleNames = biom_sample_names, row.names = biom_sample_names)
+
+META <- sample_data(map_file)
+
+Phyloseq <- merge_phyloseq(BIOM, META)
+```
+
+### Load Funfun database
+
+```{r}
+devtools::install_github("ropenscilabs/datastorr")
+devtools::install_github("traitecoevo/fungaltraits")
+```
+
+### Merge with Funfun and fungaltraits for downstream analysis [@flores-moreno; @põlme2020]
+
+```{r}
+library(fungaltraits)
+Funfun <- fungal_traits()
+fungaltraits <- read.csv("fungaltraitsDB/FungalTraits 1.2_ver_16Dec_2020 - V.1.2.csv") %>% rename(Genus = GENUS)
+
+Phylogeny<-c("Phylum", "Class", "Order", "Family")
+
+tax_data <- tax_table(Phyloseq) %>%
+  as.data.frame() %>%
+  mutate(OTU = rownames(.)) %>% 
+  left_join(select(fungaltraits, -Phylogeny), 
+                   by = "Genus") %>%
+  mutate(speciesMatched = Species) %>%
+  left_join(select(Funfun, -Genus), 
+            by = "speciesMatched")%>%
+  mutate(OTU = make.unique(as.character(OTU))) 
+
+#rename rows to merge with phyloseq object again
+rownames(tax_data) <- tax_data$OTU
+
+#merge with phyloseq object
+tax_table(Phyloseq) <- tax_data %>%
+  select(-OTU) %>%
+  as.matrix()
+```
+
+### Load metadata
+
+Add in your metadata; we can now add additional metadata (e.g., environmental data) to the phyloseq object. Make sure to replace the file path below with your file name (STUDY_metadata.csv)
+
+```{r}
+#Check that your sample ID columns match--they must match between your phyloseq object and your metadata file to merge.
+seq_data_rownames <- Phyloseq %>%
+  sample_data() 
+#SampleNames is my sample ID column name
+
+##Metadata sample ID info must match those in phyloseq object
+metadata <- read.csv(
+  "data/processed_data/STUDY_metadata.csv")%>% 
+  filter(!if_all(everything(), ~ . == "" | is.na(.)))%>% 
+  tibble::column_to_rownames("SampleUnique")
+
+
+# Check if row names are identical
+if (identical(rownames(seq_data_rownames), 
+              rownames(metadata))) {
+  print("Row names are identical.")
+} else {
+  print("Row names are NOT identical.")
+}
+
+# Add metadata to the phyloseq object
+sample_data(Phyloseq) <- metadata
+```
+
+### Store and save your unrarified phyloseq object
+
+Replace STUDY with your project name
+
+```{r}
+saveRDS(seq_data, file = "data/processed_data/STUDY_phyloseq_notrare.rds")
+```
+
+### Rarefaction and saving final rarefied OTU table 
+
+Replace STUDY with your project name
+
+```{r message=FALSE, warning=FALSE}
+set.seed(5)  # Set seed for reproducibility
+RARE <- rarefy_even_depth(seq_data, sample.size = 2000)
+
+# Save the rarefied object
+saveRDS(RARE, file = "data/processed_data/STUDY_phyloseq_rare.rds")
+```
