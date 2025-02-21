@@ -4,5 +4,5 @@
 .Ruserdata
 data/processed_data*
 data/raw_data*
-data/intermediate_amptk*
+data/intermediate_data/amptk*
 figures/
