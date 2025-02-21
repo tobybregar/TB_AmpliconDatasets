@@ -1,6 +1,0 @@
-[02/20/25 09:48:25]: /venv/bin/amptk taxonomy -f clustered.filtered.otus.fa -i clustered.otu_table.txt -m trimmed.mapping_file.txt -d ITS -o STUDY
-
-[02/20/25 09:48:25]: OS: Debian GNU/Linux 10, 12 cores, ~ 8 GB RAM. Python: 3.10.8
-[02/20/25 09:48:25]: Python Modules: numpy v1.24.1, pandas v1.5.2, matplotlib v3.6.2, psutil v5.9.4, natsort v8.2.0, biopython v1.80, edlib v1.3.9, biom-format v2.1.14
-[02/20/25 09:48:25]: AMPtk v1.5.5, VSEARCH v2.22.1
-[02/20/25 09:48:25]: Loading FASTA Records
