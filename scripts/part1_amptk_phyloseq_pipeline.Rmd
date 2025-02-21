@@ -17,7 +17,7 @@ Here’s a step-by-step guide to the **bioinformatic steps in AMPtk** for proces
 #### **On a Mac:**
 
 ```{bash echo=FALSE}
-brew install --docker
+brew install --cache docker
 ```
 
 #### **with Linux:**
