@@ -7,3 +7,9 @@ data/raw_data*
 data/intermediate_data/amptk*
 figures/
 *.log
+trimmed*
+cluster*
+*.biom
+*.txt
+*.fa
+*.phy

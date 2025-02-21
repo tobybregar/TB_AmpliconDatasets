@@ -6,6 +6,11 @@ output: html_document
 bibliography: references.bib
 ---
 
+**NOTE:** run this script to ensure you are in the correct directory:
+```{r, setup}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
 ## **Bioinformatic** steps in AMPtk
 
 Here’s a step-by-step guide to the **bioinformatic steps in AMPtk** for processing amplicon sequencing data. AMPtk is a pipeline for analyzing amplicon data (e.g., ITS, 16S, 18S) and includes steps for quality filtering, clustering, chimera removal, and taxonomic assignment. Below is a detailed workflow:
@@ -14,9 +19,35 @@ Here’s a step-by-step guide to the **bioinformatic steps in AMPtk** for proces
 
 # Installation of AMPtk and Docker
 
+## **1. Install AMPtk for Docker**
+
+Skip this step if you already have AMPtk installed on your computer.
+
+To install AMPtk for Docker on your computer run the [following commands](https://amptk.readthedocs.io/en/latest/index.html#run-from-docker):
+
+```{zsh echo=FALSE}
+mkdir -p ~/bin
+cd ~/bin
+wget -O amptk-docker https://raw.githubusercontent.com/nextgenusfs/amptk/master/amptk-docker
+chmod +x amptk-docker
+```
+
+Make sure to add the following to your `~/.bashrc` or `~/.bash_profile` if you are using `bash`. If you are using `zsh`, add it to your `~/.zshrc`, e.g.:
+
+```{zsh echo=FALSE}
+echo 'export PATH=$PATH:~/bin' >> ~/.bashrc
+source ~/.bashrc
+```
+
+## **2. Install Docker**
+
+Skip this step if you already have AMPtk installed on your computer.
+
+To install docker on your computer, follow the instructions below:
+
 #### **On a Mac:**
 
-```{bash echo=FALSE}
+```{zsh echo=FALSE}
 brew install --cache docker
 ```
 
@@ -95,7 +126,6 @@ mv -v trimm* cluster* STUDY* data/intermediate_data/amptk/ 2>/dev/null
 mv -v data/intermediate_data/amptk/*.log data/intermediate_data/amptk/logs/ 2>/dev/null
 
 mv -v data/intermediate_data/amptk/STUDY* data/intermediate_data/amptk/otu_tables/ 2>/dev/null
-
 ```
 
 ## Step 6: Create phyloseq object and save with metadata and fungaltraits Funfun info
