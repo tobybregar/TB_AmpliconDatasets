@@ -86,7 +86,7 @@ amptk-docker taxonomy -f clustered.cluster.otus.fa -i clustered.otu_table.txt -m
 
 ```{bash, engine.opts='-l'}
 # Create necessary directories
-mkdir -p data/processed_data/
+mkdir -p data/processed_data/phyloseq/ 
 mkdir -p data/intermediate_data/amptk/logs
 mkdir -p data/intermediate_data/amptk/otu_tables
 
@@ -150,7 +150,7 @@ META <- sample_data(map_file)
 Phyloseq <- merge_phyloseq(BIOM, META)
 ```
 
-### Load Funfun database
+### Load Fun^fun^ database
 
 ```{r}
 devtools::install_github("ropenscilabs/datastorr")
@@ -162,7 +162,7 @@ devtools::install_github("traitecoevo/fungaltraits")
 ```{r}
 library(fungaltraits)
 Funfun <- fungal_traits()
-fungaltraits <- read.csv("fungaltraitsDB/FungalTraits 1.2_ver_16Dec_2020 - V.1.2.csv") %>% rename(Genus = GENUS)
+fungaltraits <- read.csv("data/intermediate_data/fungaltraitsDB/FungalTraits_1.2_ver_16Dec_2020.csv") %>% rename(Genus = GENUS)
 
 Phylogeny<-c("Phylum", "Class", "Order", "Family")
 
@@ -197,7 +197,7 @@ seq_data_rownames <- Phyloseq %>%
 
 ##Metadata sample ID info must match those in phyloseq object
 metadata <- read.csv(
-  "data/processed_data/STUDY_metadata.csv")%>% 
+  "data/processed_data/metadata/STUDY_metadata.csv")%>% 
   filter(!if_all(everything(), ~ . == "" | is.na(.)))%>% 
   tibble::column_to_rownames("SampleUnique")
 
@@ -219,7 +219,7 @@ sample_data(Phyloseq) <- metadata
 Replace STUDY with your project name
 
 ```{r}
-saveRDS(seq_data, file = "data/processed_data/STUDY_phyloseq_notrare.rds")
+saveRDS(Phyloseq, file = "data/processed_data/phyloseq/STUDY_phyloseq_notrare.rds")
 ```
 
 ### Rarefaction and saving final rarefied OTU table 
@@ -228,8 +228,8 @@ Replace STUDY with your project name
 
 ```{r message=FALSE, warning=FALSE}
 set.seed(5)  # Set seed for reproducibility
-RARE <- rarefy_even_depth(seq_data, sample.size = 2000)
+RARE <- rarefy_even_depth(Phyloseq, sample.size = 2000)
 
 # Save the rarefied object
-saveRDS(RARE, file = "data/processed_data/STUDY_phyloseq_rare.rds")
+saveRDS(RARE, file = "data/processed_data/phyloseq/STUDY_phyloseq_rare.rds")
 ```

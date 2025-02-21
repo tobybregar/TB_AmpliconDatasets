@@ -1,0 +1,47 @@
+[02/20/25 16:08:20]: /venv/bin/amptk taxonomy -f clustered.cluster.otus.fa -i clustered.otu_table.txt -m trimmed.mapping_file.txt -d ITS -o STUDY
+
+[02/20/25 16:08:20]: OS: Debian GNU/Linux 10, 12 cores, ~ 8 GB RAM. Python: 3.10.8
+[02/20/25 16:08:20]: Python Modules: numpy v1.24.1, pandas v1.5.2, matplotlib v3.6.2, psutil v5.9.4, natsort v8.2.0, biopython v1.80, edlib v1.3.9, biom-format v2.1.14
+[02/20/25 16:08:20]: AMPtk v1.5.5, VSEARCH v2.22.1
+[02/20/25 16:08:20]: Loading FASTA Records
+[02/20/25 16:08:20]: 394 OTUs
+[02/20/25 16:08:20]: Global alignment OTUs with usearch_global (VSEARCH) against ITS.udb
+[02/20/25 16:08:20]: vsearch --usearch_global clustered.cluster.otus.fa --db /venv/lib/python3.10/site-packages/amptk/DB/ITS.udb --userout STUDY.usearch.txt --id 0.7 --strand both --output_no_hits --maxaccepts 500 --top_hits_only --userfields query+target+id --notrunclabels --threads 12
+[02/20/25 16:08:30]: vsearch v2.22.1_linux_x86_64, 7.8GB RAM, 12 cores
+https://github.com/torognes/vsearch
+
+Reading UDB file /venv/lib/python3.10/site-packages/amptk/DB/ITS.udb 100%
+Reorganizing data in memory 100%
+Creating bitmaps 100%
+Parsing abundances 100%
+842996461 nt in 1389964 seqs, min 100, max 6778, avg 606
+Searching 100%
+Matching unique query sequences: 382 of 394 (96.95%)
+
+[02/20/25 16:08:30]: Classifying OTUs with SINTAX (VSEARCH)
+[02/20/25 16:08:30]: vsearch --sintax clustered.cluster.otus.fa --db /venv/lib/python3.10/site-packages/amptk/DB/ITS_SINTAX.udb --tabbedout STUDY.sintax.txt -sintax_cutoff 0.8 --threads 12 --notrunclabels
+[02/20/25 16:08:33]: vsearch v2.22.1_linux_x86_64, 7.8GB RAM, 12 cores
+https://github.com/torognes/vsearch
+
+Reading UDB file /venv/lib/python3.10/site-packages/amptk/DB/ITS_SINTAX.udb 100%
+Reorganizing data in memory 100%
+Creating bitmaps 100%
+Parsing abundances 100%
+100057173 nt in 161763 seqs, min 102, max 6778, avg 619
+Classifying sequences 100%
+Classified 378 of 394 sequences (95.94%)
+
+[02/20/25 16:08:33]: SINTAX results parsed, resulting in 376 taxonomy predictions
+[02/20/25 16:08:33]: Global alignment results parsed, resulting in 394 taxonomy predictions
+[02/20/25 16:08:33]: Combined OTU taxonomy dictionary contains 394 taxonomy predictions
+[02/20/25 16:08:33]: Appending taxonomy to OTU table and OTUs
+[02/20/25 16:08:33]: Generating phylogenetic tree (MAFFT/FastTree)
+[02/20/25 16:08:33]: mafft clustered.cluster.otus.fa
+[02/20/25 16:08:35]: fasttree -nt STUDY.mafft.fasta
+[02/20/25 16:08:41]: Taxonomy finished: STUDY.taxonomy.txt
+[02/20/25 16:08:41]: Classic OTU table with taxonomy: STUDY.otu_table.taxonomy.txt
+[02/20/25 16:08:43]: biom convert -i clustered.otu_table.txt -o STUDY.biom.tmp --table-type OTU table --to-json
+[02/20/25 16:08:44]: biom add-metadata -i STUDY.biom.tmp -o STUDY.biom --observation-metadata-fp STUDY.qiime.taxonomy.txt -m trimmed.mapping_file.txt --sc-separated taxonomy --output-as-json
+[02/20/25 16:08:45]: BIOM OTU table created: STUDY.biom
+[02/20/25 16:08:45]: OTUs with taxonomy: STUDY.otus.taxonomy.fa
+[02/20/25 16:08:45]: OTU phylogeny: STUDY.tree.phy

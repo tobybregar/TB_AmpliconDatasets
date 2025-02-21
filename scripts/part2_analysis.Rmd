@@ -118,14 +118,15 @@ Here is an example for saving figures for publication:
 
 *If you don't yet have a directory for figures, you can make one here:*
 
-```{zsh eval=FALSE, engine.opts='-l', include=FALSE}
-mkdir -p figures
+```{bash eval=FALSE, engine.opts='-l', include=FALSE}
+mkdir -p figures/exploratory
+mkdir -p figures/publication
 ```
 
 Now save this in your figures directory
 
 ```{r}
-ggsave("figures/STUDY_bray_ordination.pdf", plot = ORD, width = 6, height = 4, dpi = 300)
+ggsave("figures/exploratory/STUDY_bray_ordination.pdf", plot = ORD, width = 6, height = 4, dpi = 300)
 ```
 
 You can also use cowplot or other packages if you need to combine figures and add in figure letters
@@ -144,5 +145,5 @@ combined_plot
 Now save this combined figure in your figures directory
 
 ```{r}
-ggsave("figures/Figure1_AB.pdf", plot = combined_plot, width = 6, height = 4, dpi = 300)
+ggsave("figures/publication/Figure1_AB.pdf", plot = combined_plot, width = 6, height = 4, dpi = 300)
 ```

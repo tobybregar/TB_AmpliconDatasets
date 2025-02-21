@@ -1,59 +1,77 @@
 # Generating OTU tables through AMPtk
 
-### This code is written assuming the folder structure that follows.
+1.  **Clone the repository** and rename it to match your project (e.g., `RedwoodFire`).
 
-### Download your zipped files into a Project folder and call that downloaded file “raw_data/sequencing” and don't forget to duplicate this into a private Zenodo repo!
+```{bash}
+git clone https://github.com/UW-ForestMycobiomeLab/AmpliconDataSets.git MyProject
+cd MyProject
+```
+
+2.  **Organize your raw sequencing data:**
+
+    -   Copy your **unmodified raw sequencing data** into `data/raw_data/sequencing/`.
+
+    -   Ensure your sequencing files are in `.fastq.gz` format and **unzipped** before processing.
+
+3.  **Prepare your metadata file:**
+
+    -   Place a metadata file inside `data/processed_data/metadata/`.
+
+    -   This **must** be a `.csv` file.
+
+    -   Sample names **must match** sequencing lane names exactly.
+
+    -   Include other site-level metadata (e.g., sample ID, collection date, location).
+
+4.  **Run the analysis pipeline:**
+
+    -   The scripts will automatically generate required output files and folders (e.g., `intermediate_data/` and `processed_data/`).
+
+    -   Run the scripts in `scripts/` sequentially:
+
+5.  **Backup your data on Zenodo:**
+
+    -   Duplicate your **raw data** files into a **private [Zenodo repository](https://zenodo.org/communities/uw-forestmycobiomelab/records?q=&l=list&p=1&s=10&sort=newest)** to ensure safety and accessibility.
+
+    -   Once your analysis is complete, **upload processed data** to the same repository for archiving (data/processed).
+
+**Happy analyzing! :)**
 
 ```         
 project_root/
 │
-├── raw_data/                  # Unmodified raw sequencing data
-│   ├── sequencing/            # Raw FASTQ files
-│   ├── reference/             # Reference genomes/databases 
-│   └── README.md              # Documentation on raw data sources
+├── data/                         # Main data directory
+│   ├── raw_data/                  # Unmodified raw sequencing data
+│   │   ├── sequencing/            # Raw FASTQ files
+│   │
+│   ├── intermediate_data/      # Intermediate files from preprocessing
+│   │   └──  amptk/             # AMPtk intermediate files
+│   │   │   ├── demux_reads.fq.gz  # Demultiplexed reads
+│   │   │   ├── clustered_otus.fa  # Clustered OTUs
+│   │   │   ├── filtered_otus.fa   # Filtered OTUs
+│   │   │   ├── logs/              # AMPtk logs
+│   │   │   └── otu_tables/   # backup .biom file and .txt 
+│   │
+│   ├── processed_data/             # All cleaned & processed data
+│   │   ├── metadata/               # Sample metadata files
+│   │   │   └── metadata.csv            # Sample metadata (must match) 
+│   │   ├── phyloseq/                   # Phyloseq-ready processed data
+│   │   │   ├── STUDY_phyloseq_rare.rds # Rarefied dataset 
+│   │   │   └── STUDY_phyloseq_unrarefied.rds #Dataset pre-rarefaction
 │
-├── processed_data/             # All cleaned & processed data
-│   ├── met/              # Sample metadata files
-│   │   ├── sequencing_id.txt  # Sequencing sample key
-│   │   ├── metadata.csv       # Sample metadata (must match) 
-│   │   └── README.md          # Metadata column descriptions
-│   ├── taxonomies/            # Taxonomy databases or classifiers
-│   ├── tables/                # Cleaned OTU/ASV tables for analysis
-│   ├── logs/                  # Processing logs
-│   ├── stats/                 # Quality filtering & read count 
-│   └── README.md              # Summary of processed data
+├── fungaltraitsDB/    # Database for fungal trait information
+│   └── FungalTraits_1.2_ver_16Dec_2020.csv #fungaltraits db
 │
-├── results/                    # Main output directory 
-│   ├── amptk/                 # AMPtk-specific outputs
-│   │   ├── otu_table.biom     # OTU table in BIOM format
-│   │   ├── demux_reads.fq.gz  # Demultiplexed reads
-│   │   ├── clustered_otus.fa  # Clustered OTUs
-│   │   ├── filtered_otus.fa   # Filtered OTUs
-│   │   ├── otu_table.txt      # Cleaned OTU table
-│   │   ├── logs/              # AMPtk logs
-│   ├── phyloseq/              # Phyloseq analysis outputs
-│   │   ├── fungi_phyloseq.rds # Saved phyloseq object
-│   │   ├── plots/             # Data visualization outputs
-│   │   ├── tables/            # Summary tables from phyloseq
-│   │   ├── logs/              # Processing logs
-│   ├── figures/               # Final publication-ready plots
-│   ├── logs/                  # Centralized error logs
-│   └── README.md              # Summary of analysis outputs
+├── scripts/                        # Analysis scripts
+│   ├── part1_amptk_phyloseq_pipeline.Rmd # OTU table generation 
+│   └── part2_analysis.Rmd       #Quick-start analysis
 │
-├── scripts/                    # Analysis scripts
-│   ├── 01_preprocessing.Rmd    # Read cleaning & QC
-│   ├── 02_amptk_pipeline.Rmd   # OTU table generation (AMPtk)
-│   ├── 03_phyloseq_analysis.Rmd # Community analysis & visualization
-│   ├── 04_statistical_tests.Rmd # Statistical comparisons 
-│   └── README.md               # Documentation for script workflow
+├── figures/                  # General figures and exploratory plots
+│   ├── exploratory/          # Preliminary data visualizations
+│   ├── publication/          # Final figures for publications
+│   ├── README.md             # Notes on results generation
 │
-├── config/                     # Configuration files for pipelines/tools
-│   ├── amptk_params.yaml       # AMPtk pipeline parameters
-│   ├── phyloseq_config.json    # Default settings for phyloseq analysis
-│   ├── paths.yaml              # Paths to input/output directories
-│   └── README.md               # Documentation for configuration files
+├── AMPtk_OTU_Analysis.Rproj    # R Project file (renamed for clarity)
 │
-├── AMPtk_OTU_Analysis.Rproj     # R Project file (renamed for clarity)
-│
-└── README.md                    # Project overview & setup 
+└── README.md  # Project overview & setup
 ```

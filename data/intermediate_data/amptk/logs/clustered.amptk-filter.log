@@ -1,0 +1,13 @@
+[02/20/25 16:08:15]: /venv/bin/amptk filter -i clustered.otu_table.txt -f clustered.cluster.otus.fa -d negatives F96-NegPCR, F107Extraction-Control -p 0.005
+
+[02/20/25 16:08:15]: OS: Debian GNU/Linux 10, 12 cores, ~ 8 GB RAM. Python: 3.10.8
+[02/20/25 16:08:15]: Python Modules: numpy v1.24.1, pandas v1.5.2, matplotlib v3.6.2, psutil v5.9.4, natsort v8.2.0, biopython v1.80, edlib v1.3.9, biom-format v2.1.14
+[02/20/25 16:08:15]: AMPtk v1.5.5, VSEARCH v2.22.1
+[02/20/25 16:08:15]: Loading OTU table: clustered.otu_table.txt
+[02/20/25 16:08:15]: OTU table contains 8 samples, 394 OTUs, and 99,786 reads counts
+[02/20/25 16:08:15]: Sorting OTU table naturally
+[02/20/25 16:08:15]: Normalizing OTU table to number of reads per sample
+[02/20/25 16:08:15]: Overwriting auto detect index-bleed, setting to 0.500000%
+[02/20/25 16:08:15]: Dropping 3 samples from table: negatives, F96-NegPCR,, F107Extraction-Control
+[02/20/25 16:08:15]: Filtered OTU table contains 8 samples, 394 OTUs, and 99,644 read counts
+[02/20/25 16:08:15]: Finding valid OTUs

@@ -2,5 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-data/
+data/processed_data*
+data/raw_data*
+data/intermediate_amptk*
 figures/
