@@ -1,7 +1,7 @@
-<div style="display: flex; align-items: center;">
-  <div style="float:left; margin-right: 15px;">
-    <img src="images/3166CAF0-0BFF-4A7D-B8BB-D13DCCAE0705_1_105_c.jpeg" width="200" />
-  </div>
+<div style="display: inline-block; vertical-align: middle; margin-right: 15px;">
+  <img src="images/3166CAF0-0BFF-4A7D-B8BB-D13DCCAE0705_1_105_c.jpeg" width="200" />
+</div>
+<div style="display: inline-block; vertical-align: middle;">
   <h1>Generating OTU tables through AMPtk</h1>
 </div>
 
