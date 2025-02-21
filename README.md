@@ -1,6 +1,6 @@
 # Generating OTU tables through AMPtk
 
-1.  **Clone the repository** and rename it to match your project (e.g., `RedwoodFire`).
+1.  **Clone the repository** and rename it to match your project (e.g., `FungiFire`).
 
 ```{bash}
 git clone https://github.com/UW-ForestMycobiomeLab/AmpliconDataSets.git MyProject
