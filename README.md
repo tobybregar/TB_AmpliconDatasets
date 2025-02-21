@@ -1,8 +1,7 @@
-<div style="display: inline-block; vertical-align: middle; margin-right: 15px;">
+# Generating OTU tables through AMPtk
+
+<div style="text-align: center;">
   <img src="images/3166CAF0-0BFF-4A7D-B8BB-D13DCCAE0705_1_105_c.jpeg" width="200" />
-</div>
-<div style="display: inline-block; vertical-align: middle;">
-  <h1>Generating OTU tables through AMPtk</h1>
 </div>
 
 1.  **Clone the repository** and rename it to match your project (e.g., `FungiFire`).
