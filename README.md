@@ -1,5 +1,7 @@
 # Generating OTU tables through AMPtk
 
+![](images/3166CAF0-0BFF-4A7D-B8BB-D13DCCAE0705_1_105_c.jpeg){width="277"}
+
 1.  **Clone the repository** and rename it to match your project (e.g., `FungiFire`).
 
 ```{bash}
