@@ -5,8 +5,8 @@
 data/processed_data*
 data/raw_data*
 data/intermediate_data/amptk*
-figures/
 images/
+figures/
 *.log
 trimmed*
 cluster*
