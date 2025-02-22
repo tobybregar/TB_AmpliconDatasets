@@ -1,15 +1,10 @@
 # Generating OTU tables through AMPtk
 
-<div style="text-align: center;">
-  <img src="images/3166CAF0-0BFF-4A7D-B8BB-D13DCCAE0705_1_105_c.jpeg" width="200" />
-</div>
+::: {style="text-align: center;"}
+<img src="images/3166CAF0-0BFF-4A7D-B8BB-D13DCCAE0705_1_105_c.jpeg" width="200"/>
+:::
 
-1.  **Clone the repository** and rename it to match your project (e.g., `FungiFire`).
-
-```{bash}
-git clone https://github.com/UW-ForestMycobiomeLab/AmpliconDataSets.git MyProject
-cd MyProject
-```
+1.  **Fork the repository** and rename it to match your project (e.g., `FungiFire`).
 
 2.  **Organize your raw sequencing data:**
 
