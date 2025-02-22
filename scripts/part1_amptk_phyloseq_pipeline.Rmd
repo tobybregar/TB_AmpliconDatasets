@@ -7,6 +7,7 @@ bibliography: references.bib
 ---
 
 **NOTE:** run this script to ensure you are in the correct directory:
+
 ```{r, setup}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
@@ -252,7 +253,7 @@ Replace STUDY with your project name
 saveRDS(Phyloseq, file = "data/processed_data/phyloseq/STUDY_phyloseq_notrare.rds")
 ```
 
-### Rarefaction and saving final rarefied OTU table 
+### Rarefaction and saving final rarefied OTU table
 
 Replace STUDY with your project name
 
