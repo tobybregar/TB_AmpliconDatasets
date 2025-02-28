@@ -18,29 +18,7 @@ Here’s a step-by-step guide to the **bioinformatic steps in AMPtk** for proces
 
 **NOTE:** this script runs AMPtk through docker
 
-# Installation of AMPtk and Docker
-
-## **1. Install AMPtk for Docker**
-
-Skip this step if you already have AMPtk installed on your computer.
-
-To install AMPtk for Docker on your computer run the [following commands](https://amptk.readthedocs.io/en/latest/index.html#run-from-docker):
-
-```{zsh echo=FALSE}
-mkdir -p ~/bin
-cd ~/bin
-wget -O amptk-docker https://raw.githubusercontent.com/nextgenusfs/amptk/master/amptk-docker
-chmod +x amptk-docker
-```
-
-Make sure to add the following to your `~/.bashrc` or `~/.bash_profile` if you are using `bash`. If you are using `zsh`, add it to your `~/.zshrc`, e.g.:
-
-```{zsh echo=FALSE}
-echo 'export PATH=$PATH:~/bin' >> ~/.bashrc
-source ~/.bashrc
-```
-
-## **2. Install Docker**
+## **1. Install Docker**
 
 Skip this step if you already have AMPtk installed on your computer.
 
@@ -49,22 +27,35 @@ To install docker on your computer, follow the instructions below:
 #### **On a Mac:**
 
 ```{zsh echo=FALSE}
-brew install --cache docker
+brew install --cask docker
 ```
 
-#### **with Linux:**
+# Installation of AMPtk and Docker
 
-```{bash echo=FALSE}
-sudo apt update
-sudo apt install docker.io
-sudo systemctl start docker
-sudo systemctl enable docker
-sudo usermod -aG docker $USER
+## **2. Install AMPtk for Docker**
+
+Skip this step if you already have AMPtk installed on your computer.
+
+To install AMPtk for Docker on your computer run the [following commands](https://amptk.readthedocs.io/en/latest/index.html#run-from-docker):
+
+```{zsh echo=FALSE}
+# brew install wget
+mkdir -p ~/bin
+cd ~/bin
+wget -O amptk-docker https://raw.githubusercontent.com/nextgenusfs/amptk/master/amptk-docker
+chmod +x amptk-docker
 ```
 
-Now log out and log back in for changes to take effect. The remaining steps should be the same for Unix and Linux.
+Make sure to add the following to your `~/.bashrc` or `~/.bash_profile` if you are using `bash`. If you are using `zsh`, add it to your `~/.zshrc`, e.g.:
 
-```{bash echo=FALSE}
+```{zsh echo=TRUE}
+echo 'export PATH=$PATH:~/bin' >> ~/.zshrc
+source ~/.zshrc
+```
+
+one last step
+
+```{zsh echo=FALSE}
 docker pull nextgenusfs/amptk
 ```
 
@@ -74,7 +65,7 @@ docker pull nextgenusfs/amptk
 
 Select the primers that you used; our standard ones in lab are ITS5_8S_FUN and ITS2_FUN
 
-```{bash engine.opts='-l'}
+```{zsh engine.opts='-l'}
 export ITS5_8S_FUN=AACTTTYRRCAAYGGATCWCT
 export ITS2_FUN=AGCCTCCGCTTATTGATATGCTTAART
 export ITS1F=CTTGGTCATTTAGAGGAAGTAA
@@ -94,7 +85,7 @@ amptk-docker illumina \
 
 1 error in alignment allowed; default of 97% similarity
 
-```{bash, engine.opts='-l'}
+```{zsh, engine.opts='-l'}
 amptk-docker cluster -i trimmed.demux.fq.gz -e 1.0 -o clustered   
 ```
 
@@ -102,7 +93,7 @@ amptk-docker cluster -i trimmed.demux.fq.gz -e 1.0 -o clustered
 
 -d negatives will filter your reads to remove contaminants and then drop your negative controls; adjust names as needed
 
-```{bash, engine.opts='-l'}
+```{zsh, engine.opts='-l'}
 amptk-docker filter -i clustered.otu_table.txt -f clustered.cluster.otus.fa -d negatives F96-NegPCR, F107Extraction-Control -p 0.005 # Set p-value threshold
 ```
 
@@ -110,13 +101,13 @@ amptk-docker filter -i clustered.otu_table.txt -f clustered.cluster.otus.fa -d n
 
 Change the -o STUDY to your project name eg Westside
 
-```{bash, engine.opts='-l'}
+```{zsh, engine.opts='-l'}
 amptk-docker taxonomy -f clustered.cluster.otus.fa -i clustered.otu_table.txt -m trimmed.mapping_file.txt -d ITS -o STUDY
 ```
 
 ## Step 5: Reorganize files for clarity;
 
-```{bash, engine.opts='-l'}
+```{zsh, engine.opts='-l'}
 # Create necessary directories
 mkdir -p data/processed_data/phyloseq/ 
 mkdir -p data/intermediate_data/amptk/logs
