@@ -66,6 +66,7 @@ docker pull nextgenusfs/amptk
 Select the primers that you used; our standard ones in lab are ITS5_8S_FUN and ITS2_FUN
 
 ```{zsh engine.opts='-l'}
+source ~/.zshrc
 export ITS5_8S_FUN=AACTTTYRRCAAYGGATCWCT
 export ITS2_FUN=AGCCTCCGCTTATTGATATGCTTAART
 export ITS1F=CTTGGTCATTTAGAGGAAGTAA
