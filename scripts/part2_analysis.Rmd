@@ -53,9 +53,9 @@ Make sure to edit the name of your OTU table (eg STUDY_phyloseq_rare.rds)
 
 ```{r}
 seqdata_RARE<-readRDS(
-  "data/processed_data/STUDY_phyloseq_rare.rds")
-seqdata_NOTRARE<-readRDS(
-  "data/processed_data/STUDY_phyloseq_notrare.rds")
+  "/Users/tobybregar/Git/git_test2/TB_AmpliconDatasets/data/processed_data/phyloseq/SPUN_Westside_Willing_with_FungalTraits.rds")
+# seqdata_NOTRARE<-readRDS(
+#  "/Users/tobybregar/Git/git_test2/TB_AmpliconDatasets/data/processed_data/phyloseq/STUDY_phyloseq_notrare.rds")
 ```
 
 ### Ordination (NMDS)
@@ -67,7 +67,7 @@ Using default of bray for distance (bray is default method for ordinate function
 ORDtotalvals<-ordinate(seqdata_RARE, "NMDS")
 
 ORD<-plot_ordination(seqdata_RARE, 
-              ORDtotalvals, color="SiteID")+
+              ORDtotalvals, color="stand_age")+
               theme_minimal()
 ORD
 ```
@@ -78,7 +78,7 @@ ORD
 
 # Step 1: Merge samples by a grouping variable (e.g., "SampleType")
 ps_merged <- seqdata_RARE %>%
-  merge_samples("SampleType")
+  merge_samples("stand_age")
 
 # Step 2: Convert to relative abundance
 ps_rel <- ps_merged %>%
@@ -147,3 +147,90 @@ Now save this combined figure in your figures directory
 ```{r}
 ggsave("figures/publication/Figure1_AB.pdf", plot = combined_plot, width = 6, height = 4, dpi = 300)
 ```
+
+
+## Fungal functional traits
+
+```{r}
+physeq_EMF <- subset_taxa(seqdata_RARE, primary_lifestyle == "ectomycorrhizal")
+##physeq_EMF <- subset_taxa(seqdata_RARE, primary_lifestyle == c("ectomycorrhizal, arbuscular_mycorrhizal, dung_saprotroph")
+## bar plot
+
+# Step 1: Merge samples by a grouping variable (e.g., "SampleType")
+ps_merged <- physeq_EMF %>%
+  merge_samples("stand_age")
+
+# Step 2: Convert to relative abundance
+ps_rel <- ps_merged %>%
+  transform_sample_counts(function(x) x / sum(x))
+
+# Step 3: Aggregate at the taxonomic level of interest (e.g., "Order")
+ps_taxa <- ps_rel %>%
+  tax_glom(taxrank = "Order")
+
+# Step 4: Melt the phyloseq object for visualization
+ps_melt <- ps_taxa %>%
+  psmelt() %>%
+  mutate(
+    Sample = factor(Sample, levels = unique(Sample)),  # Ensure Sample is a factor
+    Order = ifelse(Abundance < 0.1, "Other", Order)   # Group low-abundance taxa as "Other"
+  )
+
+# Step 5: Create the bar plot
+barplot <- ps_melt %>%
+  ggplot(aes(x = Sample, y = Abundance, fill = Order)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(
+    x = "Group",
+    y = "Relative Abundance",
+    fill = "Phylum") +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "plasma")  
+    # Use viridis color scale
+
+# Display the plot
+print(barplot)
+```
+
+# is this different?
+```{r}
+physeq_EMF2 <- subset_taxa(seqdata_RARE, lifestyle == "Saprotroph"
+# physeq_EMF <- subset_taxa(seqdata_RARE, primary_lifestyle == c("ectomycorrhizal, arbuscular_mycorrhizal, dung_saprotroph")
+## bar plot
+
+# Step 1: Merge samples by a grouping variable (e.g., "SampleType")
+ps_merged2 <- physeq_EMF2 %>%
+  merge_samples("stand_age")
+
+# Step 2: Convert to relative abundance
+ps_rel2 <- ps_merged2 %>%
+  transform_sample_counts(function(x) x / sum(x))
+
+# Step 3: Aggregate at the taxonomic level of interest (e.g., "Order")
+ps_taxa2 <- ps_rel2 %>%
+  tax_glom(taxrank = "Order")
+
+# Step 4: Melt the phyloseq object for visualization
+ps_melt2 <- ps_taxa2 %>%
+  psmelt() %>%
+  mutate(
+    Sample = factor(Sample, levels = unique(Sample)),  # Ensure Sample is a factor
+    Order = ifelse(Abundance < 0.1, "Other", Order)   # Group low-abundance taxa as "Other"
+  )
+
+# Step 5: Create the bar plot
+barplot2 <- ps_melt2 %>%
+  ggplot(aes(x = Sample, y = Abundance, fill = Order)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(
+    x = "Group",
+    y = "Relative Abundance",
+    fill = "Phylum") +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "plasma")  
+    # Use viridis color scale
+
+# Display the plot
+print(barplot2)
+```
+

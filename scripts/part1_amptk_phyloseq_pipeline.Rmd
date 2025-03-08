@@ -87,6 +87,7 @@ amptk-docker illumina \
 1 error in alignment allowed; default of 97% similarity
 
 ```{zsh, engine.opts='-l'}
+source ~/.zshrc
 amptk-docker cluster -i trimmed.demux.fq.gz -e 1.0 -o clustered   
 ```
 
@@ -95,6 +96,7 @@ amptk-docker cluster -i trimmed.demux.fq.gz -e 1.0 -o clustered
 -d negatives will filter your reads to remove contaminants and then drop your negative controls; adjust names as needed
 
 ```{zsh, engine.opts='-l'}
+source ~/.zshrc
 amptk-docker filter -i clustered.otu_table.txt -f clustered.cluster.otus.fa -d negatives F96-NegPCR, F107Extraction-Control -p 0.005 # Set p-value threshold
 ```
 
@@ -103,7 +105,8 @@ amptk-docker filter -i clustered.otu_table.txt -f clustered.cluster.otus.fa -d n
 Change the -o STUDY to your project name eg Westside
 
 ```{zsh, engine.opts='-l'}
-amptk-docker taxonomy -f clustered.cluster.otus.fa -i clustered.otu_table.txt -m trimmed.mapping_file.txt -d ITS -o STUDY
+source ~/.zshrc
+amptk-docker taxonomy -f clustered.cluster.otus.fa -i clustered.otu_table.txt -m trimmed.mapping_file.txt -d ITS -o Westside_Toby
 ```
 
 ## Step 5: Reorganize files for clarity;
@@ -114,11 +117,11 @@ mkdir -p data/processed_data/phyloseq/
 mkdir -p data/intermediate_data/amptk/logs
 mkdir -p data/intermediate_data/amptk/otu_tables
 
-mv -v trimm* cluster* STUDY* data/intermediate_data/amptk/ 2>/dev/null
+mv -v trimm* cluster* Westside_Toby* data/intermediate_data/amptk/ 2>/dev/null
 
 mv -v data/intermediate_data/amptk/*.log data/intermediate_data/amptk/logs/ 2>/dev/null
 
-mv -v data/intermediate_data/amptk/STUDY* data/intermediate_data/amptk/otu_tables/ 2>/dev/null
+mv -v data/intermediate_data/amptk/Westside_Toby* data/intermediate_data/amptk/otu_tables/ 2>/dev/null
 ```
 
 ## Step 6: Create phyloseq object and save with metadata and fungaltraits Funfun info
@@ -158,7 +161,7 @@ install_and_load(required_packages)
 
 ```{r}
 # Set file paths for BIOM and mapping files
-biom_file <- "data/intermediate_data/amptk/otu_tables/STUDY.biom"
+biom_file <- "data/intermediate_data/amptk/otu_tables/Westside_Toby.biom"
 
 # Import BIOM and metadata
 BIOM <- import_biom(biom_file, parseFunction = parse_taxonomy_greengenes)
@@ -176,6 +179,7 @@ Phyloseq <- merge_phyloseq(BIOM, META)
 ### Load Fun^fun^ database
 
 ```{r}
+# skip
 devtools::install_github("ropenscilabs/datastorr")
 devtools::install_github("traitecoevo/fungaltraits")
 ```
@@ -254,5 +258,5 @@ set.seed(5)  # Set seed for reproducibility
 RARE <- rarefy_even_depth(Phyloseq, sample.size = 2000)
 
 # Save the rarefied object
-saveRDS(RARE, file = "data/processed_data/phyloseq/STUDY_phyloseq_rare.rds")
+saveRDS(RARE, file = "data/processed_data/phyloseq/tobybregar_phyloseq_rare.rds")
 ```
